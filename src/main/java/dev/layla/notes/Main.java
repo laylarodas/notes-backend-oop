@@ -1,40 +1,52 @@
 package dev.layla.notes;
 
 import java.util.List;
-import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) {
 
         User user = new User(1L, "Layla", "layla@example.com");
+
         // Creamos una instancia de la clase InMemoryNoteRepository para guardar las notas en memoria
         NoteRepository noteRepository = new InMemoryNoteRepository();
+        NoteService noteService = new NoteService(noteRepository);
 
-        Note note1 = new Note(1L, "Primera nota", "Contenido 1", user);
-        // Creamos una instancia de la clase Note para guardar la primera nota
-        Note note2 = new Note(2L, "Segunda nota", "Contenido 2", user);
+        // Creamos una nueva nota
+        Note note = noteService.createNote(1L, "Primera nota", "Contenido 1", user);
+        Note note2 = noteService.createNote(2L, "Segunda nota", "Contenido 2", user);
 
-        noteRepository.save(note1);
-        noteRepository.save(note2);
-
+        // Mostramos todas las notas
         System.out.println("Todas las notas:");
-        List<Note> allNotes = noteRepository.findAll();
-        allNotes.forEach(note ->
-                System.out.println(note.getId() + " - " + note.getTitle())
+        List<Note> allNotes = noteService.getAllNotes();
+        allNotes.forEach(n ->
+                System.out.println(n.getId() + " - " + n.getTitle())
         );
 
-        System.out.println("\nBuscar nota con id = 1:");
-        Optional<Note> maybeNote = noteRepository.findById(1L);
-        maybeNote.ifPresent(note ->
-                System.out.println("Encontrada: " + note.getTitle())
+        //Buscar nota por id
+        System.out.println("Nota encontrada:");
+        Note foundNote = noteService.getNoteById(1L);
+        System.out.println(foundNote.getId() + " - " + foundNote.getTitle());
+
+        //Borrar nota por id
+        System.out.println("Borrando nota con id 1...");
+        noteService.deleteNote(1L);
+        System.out.println("Nota borrada exitosamente");
+
+        //Mostrar notas después de borrar
+        System.out.println("Notas después de borrar:");
+        List<Note> allNotesAfterDelete = noteService.getAllNotes();
+        allNotesAfterDelete.forEach(n ->
+                System.out.println(n.getId() + " - " + n.getTitle())
         );
 
-        System.out.println("\nBorrar nota con id = 1");
-        noteRepository.deleteById(1L);
-
-        System.out.println("\nNotas después de borrar:");
-        noteRepository.findAll().forEach(note ->
-                System.out.println(note.getId() + " - " + note.getTitle())
-        );
+        //Probar buscar nota inexistente (capturamos la excepción)
+        System.out.println("Buscando nota inexistente (id 3):");
+        try {
+            Note notFoundNote = noteService.getNoteById(3L);
+            System.out.println(notFoundNote);
+        } catch (NoteNotFoundException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+        
     }
 }
